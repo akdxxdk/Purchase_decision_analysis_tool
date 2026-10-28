@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>购买决策分析工具</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap">
+<style>
+  /* ============================================================
+     Design tokens —— 浅灰极简基座 · 浅绿正向 · 浅橙风险
+     ============================================================ */
+  :root{
+    --bg:          #F4F5F7;
+    --surface:     #FFFFFF;
+    --surface-2:   #FAFBFC;
+    --ink:         #1B1F27;
+    --ink-soft:    #3A4250;
+    --muted:       #667085;
+    --faint:       #98A2B3;
+    --line:        #E7E9EE;
+    --line-soft:   #F0F1F5;
+
+    --pro-base:    #EFF7F1;
+    --pro-soft:    #D9EDE1;
+    --pro:         #2E9E63;
+    --pro-deep:    #237A4C;
+
+    --con-base:    #FBF2E9;
+    --con-soft:    #F5E2D0;
+    --con:         #E07A3A;
+    --con-deep:    #B85E27;
+
+    --verdict-buy: #2E9E63;
+    --verdict-wait:#D9972B;
+    --verdict-no:  #D04B4B;
+
+    --shadow-sm:   0 1px 2px rgba(27,31,39,.05), 0 1px 3px rgba(27,31,39,.05);
+    --shadow-md:   0 4px 16px rgba(27,31,39,.07);
+    --shadow-lg:   0 12px 32px rgba(27,31,39,.12);
+    --radius:      14px;
+    --radius-lg:   18px;
+    --font-display:"Noto Serif SC", "Songti SC", "SimSun", serif;
+    --font-body:   "Noto Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, #EDF0F4 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, #F2EEE9 0%, transparent 55%),
+      var(--bg);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.55;
+    min-height:100%;
+  }
+  button{font-family:inherit; cursor:pointer; border:none; background:none;}
+  input,textarea{font-family:inherit; color:inherit;}
+  ::selection{background:rgba(46,158,99,.18);}
+
+  /* ============================================================
+     App shell
+     ============================================================ */
+  .app{
+    max-width:1220px; margin:0 auto; padding:22px 28px 56px;
+  }
+
+  /* ---- Header ---- */
+  .header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap; padding:6px 0 18px;
+  }
+  .brand{display:flex; align-items:center; gap:13px;}
+  .brand-mark{
+    width:42px; height:42px; border-radius:12px; flex:none;
+    background:linear-gradient(150deg,#2E9E63,#237A4C);
+    display:grid; place-items:center;
+    box-shadow:0 6px 16px rgba(46,158,99,.28);
+  }
+  .brand-mark svg{width:22px;height:22px;}
+  .brand h1{
+    font-family:var(--font-display); font-weight:700; font-size:20px;
+    letter-spacing:.5px; line-height:1.2;
+  }
+  .brand .sub{font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:.4px;}
+  .header-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:9px 15px; border-radius:10px; font-size:13.5px; font-weight:500;
+    color:var(--ink-soft); background:var(--surface);
+    border:1px solid var(--line); box-shadow:var(--shadow-sm);
+    transition:transform .12s ease, box-shadow .18s ease, border-color .15s, background .15s;
+    white-space:nowrap;
+  }
+  .btn svg{width:15px;height:15px; flex:none;}
+  .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow-md); border-color:#D6DAE1;}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:linear-gradient(150deg,#2E9E63,#237A4C); color:#fff;
+    border:none; box-shadow:0 6px 16px rgba(46,158,99,.25);
+  }
+  .btn-primary:hover{border:none; box-shadow:0 8px 20px rgba(46,158,99,.32);}
+  .btn-ghost{background:transparent; border-color:transparent; box-shadow:none; color:var(--muted);}
+  .btn-ghost:hover{background:var(--surface); color:var(--ink); box-shadow:var(--shadow-sm);}
+  .btn.danger{color:#B3261E;}
+  .btn.danger:hover{border-color:#E5B4B0; background:#FDF6F5;}
+
+  /* ---- Tabs ---- */
+  .tabs{
+    display:inline-flex; gap:2px; padding:4px; border-radius:12px;
+    background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow-sm);
+    margin:6px 0 20px;
+  }
+  .tab{
+    padding:8px 16px; border-radius:9px; font-size:13.5px; font-weight:500;
+    color:var(--muted); display:inline-flex; align-items:center; gap:7px;
+    transition:background .15s,color .15s;
+  }
+  .tab svg{width:15px;height:15px;}
+  .tab:hover{color:var(--ink);}
+  .tab.active{background:var(--ink); color:#fff; box-shadow:var(--shadow-sm);}
+  .tab .badge{
+    font-size:11px; padding:1px 7px; border-radius:20px; background:#EDEEF1; color:var(--muted);
+  }
+  .tab.active .badge{background:rgba(255,255,255,.22); color:#fff;}
+
+  /* ---- Item name ---- */
+  .item-name-row{display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap;}
+  .item-name-row label{font-size:14px; font-weight:600; color:var(--ink-soft); white-space:nowrap;}
+  .item-input{
+    flex:1; min-width:240px; padding:11px 14px; border-radius:11px;
+    border:1px solid var(--line); background:var(--surface); font-size:15px;
+    box-shadow:var(--shadow-sm); transition:border-color .15s, box-shadow .15s;
+  }
+  .item-input:focus{outline:none; border-color:#9BBFB0; box-shadow:0 0 0 3px rgba(46,158,99,.14);}
+  .item-input::placeholder{color:var(--faint);}
+
+  /* ---- Panels ---- */
+  .views > .view{display:none;}
+  .views > .view.active{display:block; animation:fadeIn .28s ease;}
+
+  .dual{
+    display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;
+  }
+  .panel{
+    background:var(--surface); border-radius:var(--radius-lg);
+    border:1px solid var(--line); box-shadow:var(--shadow-md);
+    overflow:hidden;
+  }
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:15px 20px; border-bottom:1px solid var(--line);
+  }
+  .panel.pro .panel-head{background:var(--pro-base);}
+  .panel.con .panel-head{background:var(--con-base);}
+  .panel-title{display:flex; align-items:center; gap:11px;}
+  .panel-title .ic{
+    width:34px;height:34px; border-radius:10px; display:grid; place-items:center; flex:none;
+  }
+  .panel.pro .panel-title .ic{background:var(--pro); box-shadow:0 4px 10px rgba(46,158,99,.25);}
+  .panel.con .panel-title .ic{background:var(--con); box-shadow:0 4px 10px rgba(224,122,58,.25);}
+  .panel-title .ic svg{width:18px;height:18px;}
+  .panel-title .tt{font-family:var(--font-display); font-weight:700; font-size:16px;}
+  .panel.pro .panel-title .tt{color:var(--pro-deep);}
+  .panel.con .panel-title .tt{color:var(--con-deep);}
+  .panel-title .side{
+    font-size:11px; font-weight:600; padding:2px 9px; border-radius:20px;
+  }
+  .panel.pro .side{background:var(--pro-soft); color:var(--pro-deep);}
+  .panel.con .side{background:var(--con-soft); color:var(--con-deep);}
+  .panel-head .sum{
+    font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px;
+  }
+  .panel-head .sum b{font-size:16px; color:var(--ink); font-variant-numeric:tabular-nums;}
+
+  .q-list{padding:6px 0;}
+  .q-item{padding:16px 20px; border-bottom:1px solid var(--line-soft);}
+  .q-item:last-child{border-bottom:none;}
+  .q-top{display:flex; align-items:flex-start; gap:11px; margin-bottom:9px;}
+  .q-num{
+    width:24px;height:24px; border-radius:8px; flex:none; margin-top:1px;
+    display:grid; place-items:center; font-size:12px; font-weight:700;
+  }
+  .panel.pro .q-num{background:var(--pro-soft); color:var(--pro-deep);}
+  .panel.con .q-num{background:var(--con-soft); color:var(--con-deep);}
+  .q-head{flex:1; min-width:0;}
+  .q-head .qt{font-size:14px; font-weight:600; color:var(--ink);}
+  .q-head .qh{font-size:12px; color:var(--muted); margin-top:1px;}
+  .q-text{
+    width:100%; margin-top:4px; padding:10px 12px; border-radius:10px;
+    border:1px solid var(--line); background:var(--surface-2);
+    font-size:13.5px; resize:vertical; min-height:56px; line-height:1.6;
+    transition:border-color .15s, box-shadow .15s, background .15s;
+  }
+  .q-text:focus{outline:none; border-color:var(--pro); background:#fff; box-shadow:0 0 0 3px rgba(46,158,99,.10);}
+  .panel.con .q-text:focus{border-color:var(--con); box-shadow:0 0 0 3px rgba(224,122,58,.12);}
+  .q-score{display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;}
+  .score-label{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:5px; min-width:70px;}
+  .score-label svg{width:14px;height:14px;}
+  .chips{display:flex; gap:5px; flex-wrap:wrap;}
+  .chip{
+    width:30px;height:30px; border-radius:9px; font-size:13px; font-weight:600;
+    color:var(--muted); background:var(--surface-2); border:1px solid var(--line);
+    display:grid; place-items:center; font-variant-numeric:tabular-nums;
+    transition:all .12s ease;
+  }
+  .chip:hover{border-color:#C9CDD6; transform:translateY(-1px);}
+  .chip.on{
+    color:#fff; border:none; transform:translateY(-1px);
+    box-shadow:0 3px 8px rgba(46,158,99,.3);
+  }
+  .panel.pro .chip.on{background:var(--pro);}
+  .panel.con .chip.on{background:var(--con); box-shadow:0 3px 8px rgba(224,122,58,.3);}
+  .chip-score-read{font-size:12.5px; color:var(--ink-soft); font-weight:600; min-width:34px; font-variant-numeric:tabular-nums;}
+
+  /* ---- Verdict / bottom ---- */
+  .verdict-wrap{
+    margin-top:20px; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius-lg); box-shadow:var(--shadow-md); overflow:hidden;
+  }
+  .verdict-head{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:16px 20px; flex-wrap:wrap;
+  }
+  .verdict-title{font-family:var(--font-display); font-weight:700; font-size:16px; display:flex; align-items:center; gap:9px;}
+  .verdict-title .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);}
+  .scores{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); flex-wrap:wrap;}
+  .scores .s{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:9px;
+    background:var(--surface-2); border:1px solid var(--line);
+  }
+  .scores .s b{font-size:16px; font-variant-numeric:tabular-nums;}
+  .scores .s.pro b{color:var(--pro-deep);}
+  .scores .s.con b{color:var(--con-deep);}
+  .scores .s.diff b{color:var(--ink);}
+  .diff-eq{font-weight:700;}
+
+  .scale-box{padding:4px 20px 26px;}
+  .scale-caption{display:flex; justify-content:space-between; font-size:11.5px; color:var(--faint); margin:4px 2px 9px; letter-spacing:.3px;}
+  .scale{
+    position:relative; height:40px; border-radius:12px; overflow:hidden;
+    background:linear-gradient(90deg, var(--con) 0%, #E9A868 46%, #E7C88F 50%, #9FC9B2 54%, var(--pro) 100%);
+    opacity:.55;
+  }
+  .scale::after{
+    content:""; position:absolute; left:50%; top:-4px; bottom:-4px; width:2px;
+    background:#fff; opacity:.7;
+  }
+  .needle-wrap{position:relative; height:26px; margin-top:2px;}
+  .needle{
+    position:absolute; top:0; transform:translateX(-50%);
+    width:3px; height:26px; border-radius:3px;
+    transition:left .5s cubic-bezier(.22,1,.36,1);
+  }
+  .needle::after{
+    content:""; position:absolute; left:50%; top:-3px; transform:translateX(-50%);
+    width:14px;height:14px;border-radius:50%; background:var(--ink); border:3px solid #fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.3);
+  }
+  .scale-labels{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); padding:9px 2px 0;}
+  .scale-labels b{color:var(--ink-soft);}
+
+  .verdict-card{
+    margin:4px 20px 24px; padding:20px 22px; border-radius:14px;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    border:1px solid var(--line);
+  }
+  .verdict-card .v-ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;flex:none;}
+  .verdict-card .v-ic svg{width:26px;height:26px;}
+  .verdict-card .v-txt{flex:1; min-width:220px;}
+  .verdict-card .v-txt .v-main{font-family:var(--font-display); font-weight:700; font-size:18px;}
+  .verdict-card .v-txt .v-sub{font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .verdict-card[data-v="buy"]{background:var(--pro-base); border-color:var(--pro-soft);}
+  .verdict-card[data-v="buy"] .v-ic{background:var(--pro); box-shadow:0 6px 16px rgba(46,158,99,.28);}
+  .verdict-card[data-v="buy"] .v-main{color:var(--pro-deep);}
+  .verdict-card[data-v="wait"]{background:#FBF4E8; border-color:#F0E2C4;}
+  .verdict-card[data-v="wait"] .v-ic{background:var(--verdict-wait); box-shadow:0 6px 16px rgba(217,151,43,.28);}
+  .verdict-card[data-v="wait"] .v-main{color:#A8721E;}
+  .verdict-card[data-v="no"]{background:#FBF1F1; border-color:#F2D6D2;}
+  .verdict-card[data-v="no"] .v-ic{background:var(--verdict-no); box-shadow:0 6px 16px rgba(208,75,75,.28);}
+  .verdict-card[data-v="no"] .v-main{color:#A63B36;}
+  .verdict-card .v-actions{display:flex; gap:8px;}
+
+  /* ---- History ---- */
+  .hist-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .hist-head .h-t{font-family:var(--font-display); font-weight:700; font-size:17px;}
+  .hist-head .h-t small{font-family:var(--font-body); font-weight:400; font-size:12.5px; color:var(--muted); margin-left:8px;}
+  .hist-empty{
+    padding:60px 20px; text-align:center; color:var(--muted);
+    background:var(--surface); border:1px dashed var(--line); border-radius:var(--radius-lg);
+  }
+  .hist-empty .he-ic{width:56px;height:56px;margin:0 auto 14px;border-radius:16px;background:var(--surface-2);display:grid;place-items:center;}
+  .hist-empty .he-ic svg{width:28px;height:28px;color:var(--faint);}
+  .hist-empty h3{font-size:15px; color:var(--ink-soft); margin-bottom:5px;}
+  .hist-empty p{font-size:13px;}
+  .hist-list{display:flex; flex-direction:column; gap:10px;}
+  .hist-item{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:14px;
+    padding:14px 16px; transition:transform .12s, box-shadow .18s;
+  }
+  .hist-item:hover{transform:translateY(-1px); box-shadow:var(--shadow-md);}
+  .hist-item .v-tag{
+    flex:none; width:44px;height:44px;border-radius:12px; display:grid; place-items:center;
+  }
+  .hist-item .v-tag svg{width:20px;height:20px;}
+  .hist-item .v-tag.buy{background:var(--pro-soft); color:var(--pro-deep);}
+  .hist-item .v-tag.wait{background:#F3E5C3; color:#A8721E;}
+  .hist-item .v-tag.no{background:#F4D9D5; color:#A63B36;}
+  .hist-item .h-body{flex:1; min-width:0;}
+  .hist-item .h-name{font-weight:600; font-size:14.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .hist-item .h-name .mode{font-size:10.5px; font-weight:600; padding:1px 7px; border-radius:20px; background:var(--surface-2); color:var(--muted); border:1px solid var(--line);}
+  .hist-item .h-meta{font-size:12px; color:var(--muted); margin-top:2px;}
+  .hist-item .h-meta b{color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+  .hist-item .h-verdict{font-size:13px; font-weight:600; flex:none;}
+  .hist-item .h-verdict.buy{color:var(--pro-deep);}
+  .hist-item .h-verdict.wait{color:#A8721E;}
+  .hist-item .h-verdict.no{color:#A63B36;}
+  .hist-item .h-ops{display:flex; gap:6px; flex:none;}
+
+  /* ---- Quick mode ---- */
+  .quick-panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); overflow:hidden;}
+  .quick-head{
+    padding:16px 20px; display:flex; align-items:center; gap:11px;
+    background:linear-gradient(150deg,#1F2530,#2E343F); color:#fff;
+  }
+  .quick-head .ic{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.14);display:grid;place-items:center;}
+  .quick-head .ic svg{width:18px;height:18px;}
+  .quick-head .tt{font-family:var(--font-display); font-weight:700; font-size:16px;}
+  .quick-head .sub{font-size:12px; opacity:.75;}
+  .quick-q{padding:18px 20px; border-bottom:1px solid var(--line-soft); display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;}
+  .quick-q:last-of-type{border-bottom:none;}
+  .quick-q .q-txt{flex:1; min-width:200px;}
+  .quick-q .q-txt .qt{font-size:14.5px; font-weight:600;}
+  .quick-q .q-txt .qh{font-size:12px; color:var(--muted); margin-top:2px;}
+  .quick-q .toggles{display:flex; gap:8px; flex:none;}
+  .toggle{
+    padding:8px 16px; border-radius:10px; font-size:13px; font-weight:600;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--muted);
+    transition:all .14s ease; min-width:74px;
+  }
+  .toggle[data-val="yes"].on{background:var(--pro); color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(46,158,99,.3);}
+  .toggle[data-val="no"].on{background:var(--con); color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(224,122,58,.3);}
+  .quick-result{padding:18px 20px; background:var(--surface-2); border-top:1px solid var(--line);}
+  .quick-result .qr-tag{
+    display:inline-flex; align-items:center; gap:8px; padding:9px 15px; border-radius:11px;
+    font-family:var(--font-display); font-weight:700; font-size:15px; margin-bottom:6px;
+  }
+  .quick-result[data-v="buy"] .qr-tag{background:var(--pro-base); color:var(--pro-deep); border:1px solid var(--pro-soft);}
+  .quick-result[data-v="wait"] .qr-tag{background:#FBF4E8; color:#A8721E; border:1px solid #F0E2C4;}
+  .quick-result[data-v="no"] .qr-tag{background:#FBF1F1; color:#A63B36; border:1px solid #F2D6D2;}
+  .quick-result .qr-reason{font-size:13px; color:var(--muted);}
+  .quick-result .qr-reason b{color:var(--ink-soft);}
+  .quick-result .qr-actions{margin-top:12px; display:none;}
+  .quick-result[data-v] .qr-actions{display:flex;}
+
+  /* ---- Toast ---- */
+  .toast-zone{position:fixed; top:22px; left:50%; transform:translateX(-50%); z-index:50; display:flex; flex-direction:column; gap:8px; align-items:center;}
+  .toast{
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:10px;
+    font-size:13.5px; box-shadow:var(--shadow-lg); display:flex; align-items:center; gap:9px;
+    animation:toastIn .25s ease; max-width:90vw;
+  }
+  .toast svg{width:16px;height:16px; flex:none;}
+  .toast.ok svg{color:var(--pro);}
+  .toast.warn svg{color:var(--con);}
+
+  /* ---- Detail modal ---- */
+  .modal-mask{
+    position:fixed; inset:0; background:rgba(20,24,31,.42); z-index:60;
+    display:none; align-items:center; justify-content:center; padding:24px;
+    backdrop-filter:blur(3px);
+  }
+  .modal-mask.show{display:flex;}
+  .modal{
+    background:var(--surface); border-radius:var(--radius-lg); max-width:760px; width:100%;
+    max-height:86vh; overflow:auto; box-shadow:var(--shadow-lg); animation:modalIn .22s ease;
+  }
+  .modal-head{
+    position:sticky; top:0; background:var(--surface); z-index:2;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:16px 20px; border-bottom:1px solid var(--line);
+  }
+  .modal-head .m-t{font-family:var(--font-display); font-weight:700; font-size:17px;}
+  .modal-body{padding:6px 20px 24px;}
+  .detail-row{margin:14px 0;}
+  .detail-row .dr-t{font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:4px;}
+  .detail-row .dr-c{font-size:13.5px; color:var(--ink-soft); background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 12px; white-space:pre-wrap; line-height:1.6;}
+  .detail-verdict{display:flex; align-items:center; gap:10px; padding:12px 0 2px;}
+  .detail-verdict .dv-tag{padding:8px 14px; border-radius:11px; font-family:var(--font-display); font-weight:700; font-size:14px;}
+  .detail-verdict .dv-tag.buy{background:var(--pro-base); color:var(--pro-deep);}
+  .detail-verdict .dv-tag.wait{background:#FBF4E8; color:#A8721E;}
+  .detail-verdict .dv-tag.no{background:#FBF1F1; color:#A63B36;}
+
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+  @keyframes toastIn{from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:none;}}
+  @keyframes modalIn{from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:none;}}
+
+  @media (max-width:820px){
+    .dual{grid-template-columns:1fr;}
+    .app{padding:16px 14px 40px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== Header ===== -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M8 7h8"/><path d="M5 7l7-4 7 4"/><path d="M6 7v5a6 6 0 0 0 12 0V7"/></svg>
+      </div>
+      <div>
+        <h1>购买决策分析工具</h1>
+        <div class="sub">买？不买？让每一个决定都有依据</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="btn-export" title="导出当前决策为TXT报告">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        导出报告
+      </button>
+      <button class="btn" id="btn-save">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+        保存记录
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Tabs ===== -->
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-view="work" role="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+      完整决策
+    </button>
+    <button class="tab" data-view="quick" role="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+      极简速判
+    </button>
+    <button class="tab" data-view="history" role="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
+      历史记录<span class="badge" id="hist-badge">0</span>
+    </button>
+  </nav>
+
+  <!-- ===== Views ===== -->
+  <div class="views">
+
+    <!-- ========== 完整决策视图 ========== -->
+    <section class="view active" id="view-work">
+      <div class="item-name-row">
+        <label for="item-name">当前纠结的「物品」</label>
+        <input id="item-name" class="item-input" type="text" placeholder="例如：新款笔记本电脑、运动相机、某课程会员…" autocomplete="off">
+      </div>
+
+      <div class="dual">
+        <!-- 左栏 正向 -->
+        <div class="panel pro">
+          <div class="panel-head">
+            <div class="panel-title">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.1 12 21l-2-2"/><path d="M12 3v18"/></svg></div>
+              <div>
+                <div class="tt">支持购买</div>
+                <div class="side">正向维度 · 利好</div>
+              </div>
+            </div>
+            <div class="sum">正向总分 <b id="pro-total">0</b></div>
+          </div>
+          <div class="q-list" id="pro-list"></div>
+        </div>
+
+        <!-- 右栏 风险 -->
+        <div class="panel con">
+          <div class="panel-head">
+            <div class="panel-title">
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 21h14"/><path d="M7 21v-8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8"/></svg></div>
+              <div>
+                <div class="tt">反对购买</div>
+                <div class="side">风险维度 · 提醒</div>
+              </div>
+            </div>
+            <div class="sum">风险总分 <b id="con-total">0</b></div>
+          </div>
+          <div class="q-list" id="con-list"></div>
+        </div>
+      </div>
+
+      <!-- 底部：实时分数 + 决策结论 -->
+      <div class="verdict-wrap">
+        <div class="verdict-head">
+          <div class="verdict-title"><span class="dot" id="verdict-dot"></span>实时决策结论</div>
+          <div class="scores">
+            <span class="s pro">正向 <b id="sc-pro">0</b></span>
+            <span class="s con">风险 <b id="sc-con">0</b></span>
+            <span class="s diff">最终差值 <b id="sc-diff">0</b></span>
+          </div>
+        </div>
+
+        <!-- 决策标尺（签名元素） -->
+        <div class="scale-box">
+          <div class="scale-caption"><span>风险占优</span><span>利弊持平</span><span>正向占优</span></div>
+          <div class="scale"></div>
+          <div class="needle-wrap"><div class="needle" id="needle"></div></div>
+          <div class="scale-labels"><span>不建议购买</span><span>观望暂缓</span><span>可以购买</span></div>
+        </div>
+
+        <div class="verdict-card" id="verdict-card">
+          <div class="v-ic" id="v-ic"></div>
+          <div class="v-txt">
+            <div class="v-main" id="v-main">等待填写打分</div>
+            <div class="v-sub" id="v-sub">填写左栏优势、右栏风险并逐项打分（1–10），系统将自动给出理性建议。</div>
+          </div>
+          <div class="v-actions">
+            <button class="btn btn-primary" id="btn-save2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+              保存记录
+            </button>
+            <button class="btn" id="btn-export2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+              导出报告
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 极简速判视图 ========== -->
+    <section class="view" id="view-quick">
+      <div class="item-name-row">
+        <label for="q-item-name">物品</label>
+        <input id="q-item-name" class="item-input" type="text" placeholder="例如：奶茶、新款手机壳、一次冲动想买的课程…" autocomplete="off">
+      </div>
+      <div class="quick-panel">
+        <div class="quick-head">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
+          <div>
+            <div class="tt">极简速判 · 三问定心</div>
+            <div class="sub">针对小额纠结消费，只需回答 3 个关键问题</div>
+          </div>
+        </div>
+        <div id="quick-list"></div>
+        <div class="quick-result" id="quick-result">
+          <div class="qr-tag">等待回答三问</div>
+          <div class="qr-reason">依次回答「是否刚需」「是否有替代」「是否易闲置」，系统将给出即时建议。</div>
+          <div class="qr-actions">
+            <button class="btn btn-primary" id="btn-save-quick">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+              保存本次速判
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 历史记录视图 ========== -->
+    <section class="view" id="view-history">
+      <div class="hist-head">
+        <div class="h-t">历史决策记录<small id="hist-count">共 0 条</small></div>
+        <button class="btn danger" id="btn-clear">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          清空全部
+        </button>
+      </div>
+      <div id="hist-list"></div>
+    </section>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="modal-mask" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="m-t" id="modal-title">记录详情</div>
+      <button class="btn btn-ghost" id="modal-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        关闭
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast-zone" id="toast-zone"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ 常量：固定问题模板 ============ */
+  var PRO_Q = [
+    {t:"购买核心必要性", h:"不买是否影响生活/工作/学习？现有设备/方案能否替代？"},
+    {t:"经济承受能力",   h:"当前收入、存款是否可以轻松支付？是否占用应急资金？"},
+    {t:"实际使用价值",   h:"买来能解决什么具体痛点？提升什么效率/体验？"},
+    {t:"使用频次预估",   h:"每周/每月大概使用次数，是否高频刚需？"},
+    {t:"长期收益",       h:"是否可以增值、省钱、省时、提升技能、创造收益？"}
+  ];
+  var CON_Q = [
+    {t:"闲置风险", h:"新鲜感过后，是否大概率吃灰、长期不用？"},
+    {t:"经济成本", h:"全款费用 + 后续维护、耗材、升级等隐性成本"},
+    {t:"机会成本", h:"这笔钱不买它，可以用来做哪些更重要的事？"},
+    {t:"贬值损耗", h:"产品是否高贬值、到手即折价、难二手转手？"},
+    {t:"替代方案", h:"是否有低价、二手、租借、免费替代方案？"}
+  ];
+  var QUICK_Q = [
+    {t:"它算刚需吗？", h:"不买会明显影响你的生活、工作或学习吗？", dir:"pro"},
+    {t:"有可替代方案吗？", h:"是否存在低价、二手、租借或免费的替代方案？", dir:"con"},
+    {t:"会不会闲置？", h:"新鲜感过后，它大概率会长期吃灰吗？", dir:"con"}
+  ];
+
+  var STORE_KEY = "purchase-decision-tool-v1";
+
+  /* ============ 数据 ============ */
+  var state = {
+    pro: [],   // [{ans, score}]
+    con: [],
+    quick: []  // [{v: "yes"/"no"|null}]
+  };
+  function emptyState(){
+    state.pro = PRO_Q.map(function(){ return {ans:"", score:5}; });
+    state.con = CON_Q.map(function(){ return {ans:"", score:5}; });
+    state.quick = QUICK_Q.map(function(){ return {v:null}; });
+  }
+
+  /* ============ 工具 ============ */
+  function $(id){ return document.getElementById(id); }
+  function escapeHtml(s){
+    return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function fmtDate(ts){
+    var d = new Date(ts);
+    function p(n){ return (n<10?"0":"")+n; }
+    return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  }
+  function toast(msg, type){
+    var zone = $("toast-zone");
+    var el = document.createElement("div");
+    el.className = "toast " + (type||"ok");
+    var ic = type==="warn"
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.1 12 21l-2-2"/><path d="M12 3v18"/></svg>';
+    el.innerHTML = ic + '<span>' + escapeHtml(msg) + '</span>';
+    zone.appendChild(el);
+    setTimeout(function(){
+      el.style.transition = "opacity .3s, transform .3s";
+      el.style.opacity = "0"; el.style.transform = "translateY(-8px)";
+      setTimeout(function(){ el.remove(); }, 320);
+    }, 2200);
+  }
+
+  /* ============ 打分与结论 ============ */
+  function proTotal(){ return state.pro.reduce(function(a,b){ return a + (b.score||0); }, 0); }
+  function conTotal(){ return state.con.reduce(function(a,b){ return a + (b.score||0); }, 0); }
+
+  // 完整模式结论：阈值随条目数缩放（5 条 → 差 10 分即显著）
+  function verdictInfo(diff, itemCount){
+    var th = itemCount * 2;
+    if(diff >= th){
+      return {
+        v:"buy", main:"理性建议：可以购买", tag:"可以购买",
+        sub:"正向优势显著高于风险，符合刚需与长期价值判断，可放心入手。",
+        reason:"正向分显著高于风险分"
+      };
+    }
+    if(diff <= -th){
+      return {
+        v:"no", main:"理性建议：不建议购买", tag:"不建议购买",
+        sub:"闲置风险、机会成本偏高，冲动购买后大概率闲置浪费。",
+        reason:"闲置风险或机会成本过高"
+      };
+    }
+    return {
+      v:"wait", main:"理性建议：观望暂缓", tag:"观望暂缓",
+      sub:"利弊接近、非刚需，建议再冷静观察几天，不要急于下单。",
+      reason:"分数接近、利弊持平、非刚需"
+    };
+  }
+
+  /* ============ 渲染：完整决策 ============ */
+  var V_ICONS = {
+    buy:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    wait:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 21h14"/><path d="M7 21v-8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8"/></svg>',
+    no:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+  };
+
+  function chipsHTML(items, cur, panelClass){
+    var html = "";
+    for(var i=1;i<=10;i++){
+      var on = i===cur ? " on" : "";
+      html += '<button class="chip' + on + '" data-v="'+i+'">'+i+'</button>';
+    }
+    return '<div class="score-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>重要程度</div>'+
+      '<div class="chips">'+html+'</div>'+
+      '<span class="chip-score-read">'+cur+' 分</span>';
+  }
+
+  function buildWork(){
+    var pl = $("pro-list"), cl = $("con-list");
+    pl.innerHTML = PRO_Q.map(function(q, i){
+      return '<div class="q-item">'+
+        '<div class="q-top">'+
+          '<div class="q-num">'+(i+1)+'</div>'+
+          '<div class="q-head"><div class="qt">'+escapeHtml(q.t)+'</div><div class="qh">'+escapeHtml(q.h)+'</div></div>'+
+        '</div>'+
+        '<textarea class="q-text" data-idx="'+i+'" placeholder="写下你的真实想法…"></textarea>'+
+        '<div class="q-score">'+chipsHTML([], state.pro[i].score, "pro")+'</div>'+
+      '</div>';
+    }).join("");
+    cl.innerHTML = CON_Q.map(function(q, i){
+      return '<div class="q-item">'+
+        '<div class="q-top">'+
+          '<div class="q-num">'+(i+1)+'</div>'+
+          '<div class="q-head"><div class="qt">'+escapeHtml(q.t)+'</div><div class="qh">'+escapeHtml(q.h)+'</div></div>'+
+        '</div>'+
+        '<textarea class="q-text" data-idx="'+i+'" placeholder="写下你的真实想法…"></textarea>'+
+        '<div class="q-score">'+chipsHTML([], state.con[i].score, "con")+'</div>'+
+      '</div>';
+    }).join("");
+
+    // 绑定输入
+    pl.querySelectorAll(".q-text").forEach(function(ta){
+      ta.value = state.pro[+ta.dataset.idx].ans;
+      ta.addEventListener("input", function(){
+        state.pro[+ta.dataset.idx].ans = ta.value;
+      });
+    });
+    cl.querySelectorAll(".q-text").forEach(function(ta){
+      ta.value = state.con[+ta.dataset.idx].ans;
+      ta.addEventListener("input", function(){
+        state.con[+ta.dataset.idx].ans = ta.value;
+      });
+    });
+    bindChips(pl, state.pro, "pro");
+    bindChips(cl, state.con, "con");
+  }
+
+  function bindChips(container, arr, panel){
+    var chips = container.querySelectorAll(".chip");
+    chips.forEach(function(chip){
+      var item = chip.closest(".q-item");
+      var idx = +item.querySelector(".q-text").dataset.idx;
+      chip.addEventListener("click", function(){
+        arr[idx].score = +chip.dataset.v;
+        item.querySelectorAll(".chip").forEach(function(c){
+          c.classList.toggle("on", c.dataset.v === chip.dataset.v);
+        });
+        item.querySelector(".chip-score-read").textContent = chip.dataset.v + " 分";
+        updateVerdict();
+      });
+    });
+  }
+
+  // 决策标尺定位
+  function positionNeedle(diff, maxAbs){
+    // diff ∈ [-maxAbs, maxAbs] → 标尺 left 8%..92%
+    var t = Math.max(-1, Math.min(1, diff / maxAbs)); // 归一化 -1..1
+    var pct = 50 + t * 42; // 42 半幅
+    $("needle").style.left = pct + "%";
+  }
+
+  function updateVerdict(){
+    var pt = proTotal(), ct = conTotal(), diff = pt - ct;
+    var maxAbs = Math.max(PRO_Q.length, CON_Q.length) * 10; // 50
+    $("pro-total").textContent = pt;
+    $("con-total").textContent = ct;
+    $("sc-pro").textContent = pt;
+    $("sc-con").textContent = ct;
+    var diffEl = $("sc-diff");
+    diffEl.textContent = diff>0?("+"+diff):diff;
+    positionNeedle(diff, maxAbs);
+
+    var card = $("verdict-card"), dot = $("verdict-dot");
+    var v = verdictInfo(diff, PRO_Q.length);
+    card.setAttribute("data-v", v.v);
+    $("v-ic").innerHTML = V_ICONS[v.v];
+    $("v-main").textContent = v.main;
+    $("v-sub").textContent = v.sub;
+    dot.style.background = v.v==="buy" ? "var(--verdict-buy)" : v.v==="no" ? "var(--verdict-no)" : "var(--verdict-wait)";
+  }
+
+  /* ============ 渲染：极简速判 ============ */
+  function buildQuick(){
+    var list = $("quick-list");
+    list.innerHTML = QUICK_Q.map(function(q, i){
+      return '<div class="quick-q">'+
+        '<div class="q-txt"><div class="qt">'+(i+1)+'. '+escapeHtml(q.t)+'</div><div class="qh">'+escapeHtml(q.h)+'</div></div>'+
+        '<div class="toggles">'+
+          '<button class="toggle" data-val="yes">是</button>'+
+          '<button class="toggle" data-val="no">否</button>'+
+        '</div>'+
+      '</div>';
+    }).join("");
+    list.querySelectorAll(".toggle").forEach(function(t){
+      var item = t.closest(".quick-q");
+      var idx = +item.querySelector(".qt").textContent.match(/^\d+/)[0] - 1;
+      t.addEventListener("click", function(){
+        var cur = state.quick[idx].v;
+        state.quick[idx].v = (cur === t.dataset.val) ? null : t.dataset.val;
+        item.querySelectorAll(".toggle").forEach(function(x){
+          x.classList.toggle("on", state.quick[idx].v === x.dataset.val);
+        });
+        updateQuick();
+      });
+    });
+  }
+
+  var lastQuickVerdict = null; // 最近一次速判结论
+
+  function updateQuick(){
+    var res = $("quick-result");
+    var a = state.quick[0].v, b = state.quick[1].v, c = state.quick[2].v;
+    if(a===null || b===null || c===null){
+      res.setAttribute("data-v","");
+      res.removeAttribute("data-v");
+      lastQuickVerdict = null;
+      res.querySelector(".qr-tag").textContent = "等待回答三问";
+      res.querySelector(".qr-reason").innerHTML = "依次回答「是否刚需」「是否有替代」「是否易闲置」，系统将给出即时建议。";
+      return;
+    }
+    var info;
+    if(a === "no"){
+      info = {v:"no", tag:"理性建议：不建议购买", reason:"并非刚需，冲动购买容易造成闲置与浪费，建议把钱留给更重要的事。"};
+    } else if(b === "yes"){
+      info = {v:"wait", tag:"理性建议：观望暂缓", reason:"存在可替代方案（低价/二手/租借/免费），先不急着买，冷静比较再决定。"};
+    } else if(c === "yes"){
+      info = {v:"wait", tag:"理性建议：观望暂缓", reason:"判断它大概率会闲置，新鲜感过后容易吃灰，建议再观察一段时间。"};
+    } else {
+      info = {v:"buy", tag:"理性建议：可以购买", reason:"刚需、无替代且不易闲置，符合理性购买条件，可放心入手。"};
+    }
+    lastQuickVerdict = info;
+    res.setAttribute("data-v", info.v);
+    res.querySelector(".qr-tag").textContent = info.tag;
+    res.querySelector(".qr-reason").innerHTML = info.reason;
+  }
+
+  function saveQuick(){
+    if(!$("q-item-name").value.trim()){
+      toast("请先填写「物品」名称", "warn");
+      $("q-item-name").focus();
+      return;
+    }
+    if(!lastQuickVerdict){
+      toast("请先回答完三个问题", "warn");
+      return;
+    }
+    var itemName = $("q-item-name").value.trim();
+    var rec = {
+      id: Date.now(),
+      item: itemName,
+      mode: "quick",
+      verdict: lastQuickVerdict.v,
+      verdictMain: lastQuickVerdict.tag,
+      quickDetail: "刚需？" + (state.quick[0].v==="yes"?"是":"否") +
+                   "｜有替代？" + (state.quick[1].v==="yes"?"是":"否") +
+                   "｜会闲置？" + (state.quick[2].v==="yes"?"是":"否") +
+                   " → " + lastQuickVerdict.tag,
+      ts: Date.now()
+    };
+    var recs = loadRecords();
+    recs.unshift(rec);
+    saveRecords(recs);
+    renderHistory();
+    toast("速判记录已保存到本地");
+  }
+
+  /* ============ 存储 ============ */
+  function loadRecords(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function saveRecords(recs){
+    localStorage.setItem(STORE_KEY, JSON.stringify(recs));
+  }
+
+  function currentRecord(){
+    var itemName = $("item-name").value.trim();
+    var rec = {
+      id: Date.now(),
+      item: itemName || "未命名物品",
+      mode: "full",
+      pro: state.pro.map(function(x){ return {q:PRO_Q, ans:x.ans, score:x.score}; }),
+      con: state.con.map(function(x){ return {q:CON_Q, ans:x.ans, score:x.score}; }),
+      proTotal: proTotal(),
+      conTotal: conTotal(),
+      diff: proTotal() - conTotal(),
+      verdict: verdictInfo(proTotal()-conTotal(), PRO_Q.length).v,
+      verdictMain: verdictInfo(proTotal()-conTotal(), PRO_Q.length).main,
+      ts: Date.now()
+    };
+    return rec;
+  }
+
+  function saveRecord(){
+    if(!$("item-name").value.trim()){
+      toast("请先填写「物品」名称", "warn");
+      $("item-name").focus();
+      return;
+    }
+    var recs = loadRecords();
+    var rec = currentRecord();
+    recs.unshift(rec);
+    saveRecords(recs);
+    renderHistory();
+    toast("记录已保存到本地");
+  }
+
+  /* ============ 渲染：历史 ============ */
+  var V_TAG = {
+    buy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    wait:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 21h14"/><path d="M7 21v-8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8"/></svg>',
+    no:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+  };
+  var V_TXT = {buy:"可以购买", wait:"观望暂缓", no:"不建议购买"};
+
+  function renderHistory(){
+    var recs = loadRecords();
+    $("hist-badge").textContent = recs.length;
+    $("hist-count").textContent = "共 " + recs.length + " 条";
+    var list = $("hist-list");
+    if(!recs.length){
+      list.innerHTML = '<div class="hist-empty"><div class="he-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></div><h3>还没有决策记录</h3><p>在「完整决策」或「极简速判」中完成分析后，保存记录会出现在这里。</p></div>';
+      return;
+    }
+    list.innerHTML = recs.map(function(r){
+      var tag = r.verdict || "wait";
+      var mode = r.mode === "quick" ? "极简速判" : "完整决策";
+      var meta = r.mode === "quick"
+        ? fmtDate(r.ts) + " · " + (r.quickDetail || "速判")
+        : fmtDate(r.ts) + " · 正向 <b>"+r.proTotal+"</b> · 风险 <b>"+r.conTotal+"</b> · 差值 <b>"+(r.diff>0?"+"+r.diff:r.diff)+"</b>";
+      return '<div class="hist-item" data-id="'+r.id+'">'+
+        '<div class="v-tag '+tag+'">'+V_TAG[tag]+'</div>'+
+        '<div class="h-body">'+
+          '<div class="h-name">'+escapeHtml(r.item)+'<span class="mode">'+mode+'</span></div>'+
+          '<div class="h-meta">'+meta+'</div>'+
+        '</div>'+
+        '<div class="h-verdict '+tag+'">'+(V_TXT[tag]||"")+'</div>'+
+        '<div class="h-ops">'+
+          '<button class="btn btn-ghost act-view" title="查看详情"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>'+
+          '<button class="btn btn-ghost act-del" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
+        '</div>'+
+      '</div>';
+    }).join("");
+  }
+
+  /* ============ 详情弹窗 ============ */
+  function openDetail(id){
+    var recs = loadRecords();
+    var r = recs.find(function(x){ return x.id === id; });
+    if(!r){ return; }
+    $("modal-title").textContent = "决策记录详情";
+    var h = "";
+    if(r.mode === "quick"){
+      var body = r.quickDetail || "（极简速判记录）";
+      h += '<div class="detail-row"><div class="dr-t">结论</div><div class="dr-c">'+escapeHtml(r.verdictMain||V_TXT[r.verdict])+'</div></div>';
+      h += '<div class="detail-row"><div class="dr-t">速判详情</div><div class="dr-c">'+escapeHtml(body)+'</div></div>';
+    } else {
+      h += '<div class="detail-verdict"><div class="dv-tag '+r.verdict+'">'+(V_TXT[r.verdict]||"")+' · '+(r.diff>0?"+"+r.diff:r.diff)+' 分</div></div>';
+      h += '<div class="detail-row"><div class="dr-t">正向总分 / 风险总分 / 差值</div><div class="dr-c">'+r.proTotal+' / '+r.conTotal+' / '+(r.diff>0?"+"+r.diff:r.diff)+'</div></div>';
+      var proRows = (r.pro||[]).map(function(p, i){
+        var t = PRO_Q[i] ? PRO_Q[i].t : ("正向项"+(i+1));
+        return (i+1)+". "+t+"　【"+p.score+"分】\n　　"+(p.ans||"（未填写）");
+      }).join("\n");
+      var conRows = (r.con||[]).map(function(c, i){
+        var t = CON_Q[i] ? CON_Q[i].t : ("风险项"+(i+1));
+        return (i+1)+". "+t+"　【"+c.score+"分】\n　　"+(c.ans||"（未填写）");
+      }).join("\n");
+      h += '<div class="detail-row"><div class="dr-t">支持购买 · 正向</div><div class="dr-c">'+escapeHtml(proRows)+'</div></div>';
+      h += '<div class="detail-row"><div class="dr-t">反对购买 · 风险</div><div class="dr-c">'+escapeHtml(conRows)+'</div></div>';
+    }
+    $("modal-body").innerHTML = h;
+    $("modal").classList.add("show");
+  }
+
+  /* ============ TXT 导出 ============ */
+  function exportTXT(){
+    var itemName = $("item-name").value.trim();
+    if(!itemName){
+      toast("请先填写「物品」名称", "warn");
+      $("item-name").focus();
+      return;
+    }
+    var pt = proTotal(), ct = conTotal(), diff = pt - ct;
+    var vi = verdictInfo(diff, PRO_Q.length);
+    var lines = [];
+    lines.push("======================================");
+    lines.push("        购买决策分析报告");
+    lines.push("======================================");
+    lines.push("物品名称：" + itemName);
+    lines.push("分析时间：" + fmtDate(Date.now()));
+    lines.push("");
+    lines.push("【支持购买 · 正向维度】");
+    PRO_Q.forEach(function(q, i){
+      lines.push((i+1)+". "+q.t+"　【"+state.pro[i].score+"分】");
+      lines.push("   " + (state.pro[i].ans ? state.pro[i].ans : "（未填写）"));
+    });
+    lines.push("正向总分：" + pt);
+    lines.push("");
+    lines.push("【反对购买 · 风险维度】");
+    CON_Q.forEach(function(q, i){
+      lines.push((i+1)+". "+q.t+"　【"+state.con[i].score+"分】");
+      lines.push("   " + (state.con[i].ans ? state.con[i].ans : "（未填写）"));
+    });
+    lines.push("风险总分：" + ct);
+    lines.push("");
+    lines.push("--------------------------------------");
+    lines.push("最终差值评分：" + (diff>0?"+"+diff:diff));
+    lines.push("系统决策结论：" + vi.main);
+    lines.push("判定依据：" + vi.reason);
+    lines.push("--------------------------------------");
+    lines.push("理性消费提示：本报告基于您的结构化自评，仅作决策参考。");
+    lines.push("======================================");
+
+    var blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
+    var a = document.createElement("a");
+    var d = new Date();
+    var fname = "决策报告_" + itemName.replace(/[\\/:*?"<>|]/g,"_").slice(0,20) + "_" + d.getFullYear()+(d.getMonth()+1)+d.getDate()+".txt";
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    toast("TXT 决策报告已导出");
+  }
+
+  /* ============ 视图切换 ============ */
+  function switchView(name){
+    document.querySelectorAll(".tab").forEach(function(t){
+      t.classList.toggle("active", t.dataset.view === name);
+    });
+    document.querySelectorAll(".views .view").forEach(function(v){
+      v.classList.toggle("active", v.id === "view-" + name);
+    });
+    if(name === "history"){ renderHistory(); }
+  }
+
+  /* ============ 事件绑定 ============ */
+  function init(){
+    emptyState();
+    buildWork();
+    buildQuick();
+    updateVerdict();
+    renderHistory();
+
+    document.querySelectorAll(".tab").forEach(function(t){
+      t.addEventListener("click", function(){ switchView(t.dataset.view); });
+    });
+
+    $("btn-save").addEventListener("click", saveRecord);
+    $("btn-save2").addEventListener("click", saveRecord);
+    $("btn-save-quick").addEventListener("click", saveQuick);
+    $("btn-export").addEventListener("click", exportTXT);
+    $("btn-export2").addEventListener("click", exportTXT);
+
+    // 历史列表事件（事件委托）
+    $("hist-list").addEventListener("click", function(e){
+      var item = e.target.closest(".hist-item");
+      if(!item){ return; }
+      var id = +item.dataset.id;
+      if(e.target.closest(".act-del")){
+        var recs = loadRecords();
+        recs = recs.filter(function(r){ return r.id !== id; });
+        saveRecords(recs);
+        renderHistory();
+        toast("已删除该记录", "warn");
+      } else if(e.target.closest(".act-view")){
+        openDetail(id);
+      }
+    });
+
+    $("btn-clear").addEventListener("click", function(){
+      if(!loadRecords().length){ toast("暂无记录可清空", "warn"); return; }
+      if(confirm("确定要清空全部决策记录吗？此操作不可撤销。")){
+        saveRecords([]);
+        renderHistory();
+        toast("已清空全部记录", "warn");
+      }
+    });
+
+    $("modal-close").addEventListener("click", function(){ $("modal").classList.remove("show"); });
+    $("modal").addEventListener("click", function(e){
+      if(e.target === $("modal")){ $("modal").classList.remove("show"); }
+    });
+    document.addEventListener("keydown", function(e){
+      if(e.key === "Escape"){ $("modal").classList.remove("show"); }
+    });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
